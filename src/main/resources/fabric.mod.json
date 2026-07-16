@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "autoflyer",
+  "version": "${version}",
+  "name": "Auto Flyer",
+  "description": "Bay tu dong qua lai giua 2 toa do da luu, co GUI cai dat va tich hop Mod Menu.",
+  "authors": ["you"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/autoflyer/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.example.autoflyer.AutoFlyerMod"
+    ],
+    "modmenu": [
+      "com.example.autoflyer.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "autoflyer.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
