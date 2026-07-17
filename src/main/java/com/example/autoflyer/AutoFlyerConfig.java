@@ -21,8 +21,11 @@ public class AutoFlyerConfig {
 
     public double x1, y1, z1;
     public double x2, y2, z2;
-    public double speed = 0.6; // block/tick (~12 m/s)
-    public double zigzagStep = 2.0; // moi lan quet xong 1 hang thi dich sang ngang bao nhieu block
+    public double speed = 0.3; // block/tick (~12 m/s)
+    public double zigzagStep = 4.0; // moi lan quet xong 1 hang thi dich sang ngang bao nhieu block
+    
+    public double litematicaHoverHeight = 2.0;
+	public double litematicaSpeed = 0.3;
 
     public static AutoFlyerConfig INSTANCE = load();
 
