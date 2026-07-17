@@ -184,15 +184,38 @@ public class LitematicaNavigator {
         lastPos = current;
     }
 
-    /** Chon duong bay: neu duong thang toi dich khong bi vuong thi bay thang (nhanh nhat). */
+    /**
+     * Chon duong bay: neu duong thang toi dich khong bi vuong thi bay thang (nhanh nhat).
+     * Neu bi vuong, DO TIM do cao thap nhat vua du de bay vong qua (tang dan tung buoc nho),
+     * thay vi luon bay len tan dinh cao nhat cua ca cong trinh - tranh ton thoi gian khi vat can
+     * chi la 1 khoi nho gan do.
+     */
     private static Phase choosePath(ClientWorld world, Vec3d from, Vec3d to) {
         if (isPathClear(world, from, to)) {
             return Phase.DIRECT;
         }
-        cruiseY = LitematicaBridge.getHighestEnabledPlacementTop() + 5;
-        // Neu nguoi choi hoac diem dich da cao hon do cao "an toan" tinh duoc thi nang len them
-        cruiseY = Math.max(cruiseY, Math.max(from.y, to.y) + 3);
+
+        int buildTop = LitematicaBridge.getHighestEnabledPlacementTop();
+        double baseY = Math.max(from.y, to.y);
+        double capY = Math.max(buildTop + 5, baseY + 3); // gioi han tren cung, phong khi khong tim duoc cho nao thap hon
+
+        // Dò tang dan tung 2 block 1, tim do cao THAP NHAT ma ca 3 doan (len - ngang - xuong) deu thong thoang
+        for (double candidateY = baseY + 2; candidateY <= capY; candidateY += 2) {
+            Vec3d ascendPoint = new Vec3d(from.x, candidateY, from.z);
+            Vec3d travelPoint = new Vec3d(to.x, candidateY, to.z);
+
+            if (isPathClear(world, from, ascendPoint)
+                    && isPathClear(world, ascendPoint, travelPoint)
+                    && isPathClear(world, travelPoint, to)) {
+                cruiseY = candidateY;
+                return Phase.ASCEND;
+            }
+        }
+
+        // Khong tim duoc cho nao thap hon thong thoang -> danh phai bay len tan dinh cong trinh
+        cruiseY = capY;
         return Phase.ASCEND;
+    }
     }
 
     /** Kiem tra doan thang tu 'from' toi 'to' co bi block dac chan khong (danh gia don gian, khong phai raytrace vat ly that). */
