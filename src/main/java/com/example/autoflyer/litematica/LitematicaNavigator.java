@@ -216,7 +216,6 @@ public class LitematicaNavigator {
         cruiseY = capY;
         return Phase.ASCEND;
     }
-    }
 
     /** Kiem tra doan thang tu 'from' toi 'to' co bi block dac chan khong (danh gia don gian, khong phai raytrace vat ly that). */
     private static boolean isPathClear(ClientWorld world, Vec3d from, Vec3d to) {
