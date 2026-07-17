@@ -3,7 +3,7 @@
   "id": "autoflyer",
   "version": "${version}",
   "name": "Auto Flyer",
-  "description": "Auto Build: tu dong bay den block con thieu theo ban ve Litematica dang tai de mod print tu dat.",
+  "description": "Auto Fly (ziczac thu cong) + Auto Build (tu dong theo Litematica), co GUI day du va phim tat.",
   "authors": ["you"],
   "contact": {},
   "license": "MIT",

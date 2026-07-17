@@ -46,7 +46,7 @@ public final class HudButton {
         int bg = hovered ? 0xAA555555 : 0xAA000000;
         context.fill(x, y, x + WIDTH, y + HEIGHT, bg);
         context.drawBorder(x, y, WIDTH, HEIGHT, 0xFFFFFFFF);
-        context.drawCenteredTextWithShadow(client.textRenderer, Text.literal("Auto Build"),
+        context.drawCenteredTextWithShadow(client.textRenderer, Text.literal("Auto Flyer"),
                 x + WIDTH / 2, y + (HEIGHT - 8) / 2, 0xFFFFFF);
     }
 }

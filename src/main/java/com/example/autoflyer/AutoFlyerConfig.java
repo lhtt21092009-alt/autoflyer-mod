@@ -12,13 +12,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Config cua Auto Flyer v3 - chi con che do Auto Build (Litematica),
- * duoc ghi ra config/autoflyer.json de giu lai sau khi thoat game.
+ * Config cua Auto Flyer v4 - co ca 2 chuc nang: Auto Fly (thu cong, ziczac giua 2 vi tri)
+ * va Auto Build (tu dong theo ban ve Litematica). Ghi ra config/autoflyer.json.
  */
 public class AutoFlyerConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("autoflyer.json");
 
+    // ---- Auto Fly (thu cong) ----
+    public double x1, y1, z1;
+    public double x2, y2, z2;
+    public double speed = 0.6; // block/tick (~12 m/s)
+    public double zigzagStep = 2.0; // moi lan quet xong 1 hang thi dich sang ngang bao nhieu block
+
+    // ---- Auto Build (Litematica) ----
     public double litematicaHoverHeight = 2.0; // bay cao hon block dich bao nhieu (y+2 mac dinh)
     public double litematicaSpeed = 0.8; // toc do bay (block/tick)
 

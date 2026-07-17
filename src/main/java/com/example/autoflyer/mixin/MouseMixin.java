@@ -1,7 +1,7 @@
 package com.example.autoflyer.mixin;
 
 import com.example.autoflyer.HudButton;
-import com.example.autoflyer.gui.SettingsScreen;
+import com.example.autoflyer.gui.MainMenuScreen;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.glfw.GLFW;
@@ -33,7 +33,7 @@ public class MouseMixin {
         double scaledY = this.y * screenHeight / client.getWindow().getHeight();
 
         if (HudButton.isInside(screenWidth, scaledX, scaledY)) {
-            client.setScreen(new SettingsScreen(null));
+            client.setScreen(new MainMenuScreen(null));
             ci.cancel();
         }
     }

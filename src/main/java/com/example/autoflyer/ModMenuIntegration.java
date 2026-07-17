@@ -1,6 +1,6 @@
 package com.example.autoflyer;
 
-import com.example.autoflyer.gui.SettingsScreen;
+import com.example.autoflyer.gui.MainMenuScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 
@@ -10,6 +10,6 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 public class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return SettingsScreen::new;
+        return MainMenuScreen::new;
     }
 }

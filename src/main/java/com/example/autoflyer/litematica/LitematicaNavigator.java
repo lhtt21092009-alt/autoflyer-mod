@@ -5,6 +5,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -20,11 +22,15 @@ import java.util.Set;
  *
  * De tranh bay xuyen tuong khi dang xay dang map art 3D, duong bay chia lam 3 doan theo truc
  * thay vi bay thang (cheo) toi diem dich:
- *   1) ASCEND  - bay thang len do cao an toan (tren dinh toan bo cong trinh)
- *   2) TRAVEL  - bay ngang (X/Z) toi ngay phia tren diem dich, van o do cao an toan
+ *   1) ASCEND  - bay thang len do cao vua du de bay vong qua vat can (dò tang dan, khong len tan dinh)
+ *   2) TRAVEL  - bay ngang (X/Z) toi ngay phia tren diem dich, van o do cao da chon
  *   3) DESCEND - ha thang xuong diem dich (x, y+hoverHeight, z)
  * Neu duong bay thang toi dich khong bi vuong block nao (kiem tra bang isPathClear), se bay
  * thang toi luon cho nhanh (dung yeu cau "bay nhanh nhat co the").
+ *
+ * Chong ket: kiem tra va thoat ket o nhieu tang - nudge tuc thi, thu lai do cao khac, watchdog
+ * tong thoi gian tren 1 block, va isPathClear kiem tra ca "be rong" nguoi choi (khong chi 1 tia
+ * o giua) de tranh truong hop tuong nhu thoang nhung va vao nguoi khi bay.
  */
 public class LitematicaNavigator {
     private enum Phase { ASCEND, TRAVEL, DESCEND, HOVER, DIRECT }
@@ -38,15 +44,18 @@ public class LitematicaNavigator {
     private static int stuckTicks = 0;
     private static int hoverTicks = 0;
     private static int retries = 0;
+    private static int targetTotalTicks = 0; // watchdog: tong so tick da danh cho 1 block hien tai
 
     // Vi tri vua "cho qua lau ma van chua duoc dat" se bi tam thoi bo qua, tranh ket o 1 cho.
     private static final Map<BlockPos, Long> skipUntilTick = new HashMap<>();
     private static long tickCounter = 0;
 
-    private static final int HOVER_TIMEOUT_TICKS = 100;   // 5 giay cho printer dat block
-    private static final int STUCK_TIMEOUT_TICKS = 40;    // 2 giay khong nhuc nhich -> coi la vuong
+    private static final int HOVER_TIMEOUT_TICKS = 100;      // 5 giay cho printer dat block
+    private static final int STUCK_TIMEOUT_TICKS = 24;       // 1.2 giay khong nhuc nhich -> coi la vuong (phan ung nhanh hon)
     private static final int MAX_RETRIES_BEFORE_SKIP = 3;
-    private static final int SEARCH_HARD_CAP = 400_000;   // an toan hieu nang khi quet vung lon
+    private static final int TARGET_WATCHDOG_TICKS = 600;    // 30 giay/1 block toi da, qua thi bo qua bat ke ly do gi
+    private static final int SEARCH_HARD_CAP = 400_000;      // an toan hieu nang khi quet vung lon
+    private static final double PLAYER_RADIUS = 0.35;        // ban kinh gan dung cua hitbox nguoi choi (rong 0.6)
 
     public static boolean isRunning() {
         return running;
@@ -60,12 +69,19 @@ public class LitematicaNavigator {
             }
             return;
         }
+
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (player != null && !player.getAbilities().allowFlying) {
+            player.sendMessage(Text.literal("Auto Flyer: canh bao - ban khong duoc phep bay tren server nay, Auto Build co the bi ket."), false);
+        }
+
         running = true;
         currentTarget = null;
         phase = null;
         stuckTicks = 0;
         hoverTicks = 0;
         retries = 0;
+        targetTotalTicks = 0;
         lastPos = null;
     }
 
@@ -102,6 +118,7 @@ public class LitematicaNavigator {
             currentTarget = LitematicaBridge.findNearestMissingBlock(world, player.getPos(), skipUntilTick.keySet(), SEARCH_HARD_CAP);
             if (currentTarget == null) {
                 player.sendMessage(Text.literal("Auto Flyer: khong con block nao con thieu trong lop dang hien - da xong!"), false);
+                playDoneSound(client);
                 stop();
                 return;
             }
@@ -109,6 +126,16 @@ public class LitematicaNavigator {
             phase = null; // se tinh lai duong bay ben duoi
             hoverTicks = 0;
             retries = 0;
+            targetTotalTicks = 0;
+        }
+
+        targetTotalTicks++;
+        if (targetTotalTicks > TARGET_WATCHDOG_TICKS) {
+            // Da qua lau ma van khong xong 1 block nay du da thu moi cach -> bo qua han, tranh treo mai
+            skipUntilTick.put(currentTarget, tickCounter + 200);
+            currentTarget = null;
+            phase = null;
+            return;
         }
 
         Vec3d hoverTarget = new Vec3d(
@@ -169,13 +196,17 @@ public class LitematicaNavigator {
             if (stuckTicks > STUCK_TIMEOUT_TICKS) {
                 stuckTicks = 0;
                 retries++;
+
                 if (retries > MAX_RETRIES_BEFORE_SKIP) {
                     // Thu vai lan van khong toi duoc -> bo qua block nay, tim block khac
                     skipUntilTick.put(currentTarget, tickCounter + 200);
                     currentTarget = null;
                 } else {
-                    // Thu lai voi do cao an toan hon (bay len cao them)
-                    cruiseY += 6;
+                    // Nhuc tuc thi len tren de thoat ra khoi cho bi ket (vd ket vao 1 goc tuong),
+                    // roi tinh lai duong bay voi do cao cao hon lan truoc.
+                    player.setVelocity(0, 0.4, 0);
+                    player.velocityModified = true;
+                    cruiseY = Math.max(cruiseY, current.y) + 6;
                     phase = Phase.ASCEND;
                 }
             }
@@ -217,24 +248,42 @@ public class LitematicaNavigator {
         return Phase.ASCEND;
     }
 
-    /** Kiem tra doan thang tu 'from' toi 'to' co bi block dac chan khong (danh gia don gian, khong phai raytrace vat ly that). */
+    /**
+     * Kiem tra doan thang tu 'from' toi 'to' co bi block dac chan khong. Kiem tra ca "be rong" cua
+     * nguoi choi (4 diem lech sang 2 ben theo PLAYER_RADIUS) va ca chan/dau (offset +1.6 theo Y),
+     * khong chi 1 tia o chinh giua - tranh truong hop tuong nhu thoang nhung thuc ra va vao than
+     * nguoi choi khi bay ngang qua (day la nguyen nhan chinh gay ket ma tia don khong phat hien duoc).
+     */
     private static boolean isPathClear(ClientWorld world, Vec3d from, Vec3d to) {
         double distance = from.distanceTo(to);
         if (distance < 0.1) return true;
 
         int steps = (int) Math.ceil(distance / 0.5);
-        for (int i = 1; i < steps; i++) {
+        for (int i = 1; i <= steps; i++) {
             double t = (double) i / steps;
             double x = from.x + (to.x - from.x) * t;
             double y = from.y + (to.y - from.y) * t;
             double z = from.z + (to.z - from.z) * t;
-            BlockPos pos = BlockPos.ofFloored(x, y, z);
-            BlockState state = world.getBlockState(pos);
-            if (!state.isAir() && !state.getCollisionShape(world, pos).isEmpty()) {
+
+            if (isSolidNear(world, x, y, z) || isSolidNear(world, x, y + 1.5, z)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private static boolean isSolidNear(ClientWorld world, double x, double y, double z) {
+        double[][] offsets = {
+                {0, 0}, {PLAYER_RADIUS, 0}, {-PLAYER_RADIUS, 0}, {0, PLAYER_RADIUS}, {0, -PLAYER_RADIUS}
+        };
+        for (double[] off : offsets) {
+            BlockPos pos = BlockPos.ofFloored(x + off[0], y, z + off[1]);
+            BlockState state = world.getBlockState(pos);
+            if (!state.isAir() && !state.getCollisionShape(world, pos).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Bay ve phia target voi toc do cho truoc. Tra ve true neu da toi noi. */
@@ -272,5 +321,18 @@ public class LitematicaNavigator {
             if (e.getValue() <= tickCounter) expired.add(e.getKey());
         }
         for (BlockPos pos : expired) skipUntilTick.remove(pos);
+    }
+
+    /** Phat am thanh bao hieu khi xay xong toan bo (het block can dat trong lop dang hien). */
+    private static void playDoneSound(MinecraftClient client) {
+        if (client.player == null || client.world == null) return;
+        client.world.playSound(
+                client.player,
+                client.player.getBlockPos(),
+                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
+                SoundCategory.MASTER,
+                1.0f,
+                1.0f
+        );
     }
 }

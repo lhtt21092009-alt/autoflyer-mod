@@ -12,8 +12,9 @@ public class AutoFlyerMod implements ClientModInitializer {
         // neu khong game se crash voi loi "GameOptions has already been initialised"
         AutoFlyerKeybind.init();
 
-        // Chay logic Auto Build (Litematica) + kiem tra phim tat moi client tick
+        // Chay logic Auto Fly + Auto Build + kiem tra phim tat moi client tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            FlightTask.tick(client);
             LitematicaNavigator.tick(client);
             AutoFlyerKeybind.tick(client);
         });

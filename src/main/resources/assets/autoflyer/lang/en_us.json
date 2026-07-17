@@ -1,4 +1,6 @@
 {
   "key.categories.autoflyer": "Auto Flyer",
-  "key.autoflyer.settings": "Open Auto Flyer settings"
+  "key.autoflyer.opengui": "Open Auto Flyer menu",
+  "key.autoflyer.toggle_autobuild": "Toggle Auto Build",
+  "key.autoflyer.toggle_autofly": "Toggle Auto Fly"
 }

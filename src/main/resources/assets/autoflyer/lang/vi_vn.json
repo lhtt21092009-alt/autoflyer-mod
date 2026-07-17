@@ -1,4 +1,6 @@
 {
   "key.categories.autoflyer": "Auto Flyer",
-  "key.autoflyer.settings": "Mo cai dat Auto Flyer"
+  "key.autoflyer.opengui": "Mo menu Auto Flyer",
+  "key.autoflyer.toggle_autobuild": "Bat/tat Auto Build",
+  "key.autoflyer.toggle_autofly": "Bat/tat Auto Fly"
 }

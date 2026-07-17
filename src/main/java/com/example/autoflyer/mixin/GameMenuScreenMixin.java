@@ -1,6 +1,6 @@
 package com.example.autoflyer.mixin;
 
-import com.example.autoflyer.gui.SettingsScreen;
+import com.example.autoflyer.gui.MainMenuScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -27,7 +27,7 @@ public abstract class GameMenuScreenMixin extends Screen {
         GameMenuScreen self = (GameMenuScreen) (Object) this;
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Auto Flyer"), b -> {
                     MinecraftClient client = MinecraftClient.getInstance();
-                    client.setScreen(new SettingsScreen(self));
+                    client.setScreen(new MainMenuScreen(self));
                 })
                 .dimensions(10, 10, 90, 20)
                 .build());
