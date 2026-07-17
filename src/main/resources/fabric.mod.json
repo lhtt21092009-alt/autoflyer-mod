@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "autoflyer",
+  "version": "${version}",
+  "name": "Auto Flyer",
+  "description": "Auto Build: tu dong bay den block con thieu theo ban ve Litematica dang tai de mod print tu dat.",
+  "authors": ["you"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/autoflyer/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.example.autoflyer.AutoFlyerMod"
+    ],
+    "modmenu": [
+      "com.example.autoflyer.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "autoflyer.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "litematica": "*",
+    "malilib": "*"
+  }
+}
