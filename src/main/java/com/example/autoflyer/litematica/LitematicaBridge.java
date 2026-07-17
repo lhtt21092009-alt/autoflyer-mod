@@ -2,6 +2,7 @@ package com.example.autoflyer.litematica;
 
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
@@ -23,6 +24,11 @@ import java.util.Set;
  * NHUNG block that trong world thuc te lai khac (chua dat hoac dat sai).
  * Chi xet trong pham vi lop (layer) ma Litematica dang hien (DataManager.getRenderLayerRange()),
  * dung y "chi nhung block dang hien moi di den" nguoi dung yeu cau.
+ *
+ * LUU Y QUAN TRONG: KHONG dung SchematicPlacement.getEclosingBox() de lay vung can quet, vi gia tri
+ * nay CHI duoc tinh khi nguoi dung bat tuy chon "Render enclosing box" trong Litematica (mac dinh TAT),
+ * neu khong no luon tra ve null -> khien vong quet bo qua het moi thu va bao "da xong" ngay lap tuc.
+ * Thay vao do, dung getSubRegionBoxes(...) - luon duoc tinh lai moi lan goi, khong phu thuoc tuy chon hien thi.
  */
 public final class LitematicaBridge {
     private LitematicaBridge() {}
@@ -51,45 +57,44 @@ public final class LitematicaBridge {
         for (SchematicPlacement placement : DataManager.getSchematicPlacementManager().getAllSchematicsPlacements()) {
             if (!placement.isEnabled()) continue;
 
-            Box box = placement.getEclosingBox();
-            if (box == null) continue;
+            for (Box box : placement.getSubRegionBoxes(SubRegionPlacement.RequiredEnabled.PLACEMENT_ENABLED).values()) {
+                BlockPos p1 = box.getPos1();
+                BlockPos p2 = box.getPos2();
+                if (p1 == null || p2 == null) continue;
 
-            BlockPos p1 = box.getPos1();
-            BlockPos p2 = box.getPos2();
-            if (p1 == null || p2 == null) continue;
+                int minX = Math.min(p1.getX(), p2.getX());
+                int maxX = Math.max(p1.getX(), p2.getX());
+                int minZ = Math.min(p1.getZ(), p2.getZ());
+                int maxZ = Math.max(p1.getZ(), p2.getZ());
+                int minY = Math.max(Math.min(p1.getY(), p2.getY()), layerRange.getLayerMin());
+                int maxY = Math.min(Math.max(p1.getY(), p2.getY()), layerRange.getLayerMax());
 
-            int minX = Math.min(p1.getX(), p2.getX());
-            int maxX = Math.max(p1.getX(), p2.getX());
-            int minZ = Math.min(p1.getZ(), p2.getZ());
-            int maxZ = Math.max(p1.getZ(), p2.getZ());
-            int minY = Math.max(Math.min(p1.getY(), p2.getY()), layerRange.getLayerMin());
-            int maxY = Math.min(Math.max(p1.getY(), p2.getY()), layerRange.getLayerMax());
+                for (int y = minY; y <= maxY; y++) {
+                    for (int x = minX; x <= maxX; x++) {
+                        for (int z = minZ; z <= maxZ; z++) {
+                            if (++checked > hardCapCells) {
+                                return best; // an toan: du lon roi thi tra ve gan nhat tim duoc
+                            }
 
-            for (int y = minY; y <= maxY; y++) {
-                for (int x = minX; x <= maxX; x++) {
-                    for (int z = minZ; z <= maxZ; z++) {
-                        if (++checked > hardCapCells) {
-                            return best; // an toan: du lon roi thi tra ve gan nhat tim duoc
-                        }
+                            BlockPos pos = new BlockPos(x, y, z);
+                            if (skip.contains(pos)) continue;
+                            if (!layerRange.isPositionWithinRange(pos)) continue;
 
-                        BlockPos pos = new BlockPos(x, y, z);
-                        if (skip.contains(pos)) continue;
-                        if (!layerRange.isPositionWithinRange(pos)) continue;
+                            BlockState schemState = schematicWorld.getBlockState(pos);
+                            if (schemState.isAir()) continue;
 
-                        BlockState schemState = schematicWorld.getBlockState(pos);
-                        if (schemState.isAir()) continue;
+                            BlockState realState = world.getBlockState(pos);
+                            if (schemState.equals(realState)) continue; // da dat dung roi
 
-                        BlockState realState = world.getBlockState(pos);
-                        if (schemState.equals(realState)) continue; // da dat dung roi
+                            double dx = (x + 0.5) - fromPos.x;
+                            double dy = (y + 0.5) - fromPos.y;
+                            double dz = (z + 0.5) - fromPos.z;
+                            double distSq = dx * dx + dy * dy + dz * dz;
 
-                        double dx = (x + 0.5) - fromPos.x;
-                        double dy = (y + 0.5) - fromPos.y;
-                        double dz = (z + 0.5) - fromPos.z;
-                        double distSq = dx * dx + dy * dy + dz * dz;
-
-                        if (distSq < bestDistSq) {
-                            bestDistSq = distSq;
-                            best = pos;
+                            if (distSq < bestDistSq) {
+                                bestDistSq = distSq;
+                                best = pos;
+                            }
                         }
                     }
                 }
@@ -115,9 +120,10 @@ public final class LitematicaBridge {
         int top = Integer.MIN_VALUE;
         for (SchematicPlacement placement : DataManager.getSchematicPlacementManager().getAllSchematicsPlacements()) {
             if (!placement.isEnabled()) continue;
-            Box box = placement.getEclosingBox();
-            if (box == null || box.getPos1() == null || box.getPos2() == null) continue;
-            top = Math.max(top, Math.max(box.getPos1().getY(), box.getPos2().getY()));
+            for (Box box : placement.getSubRegionBoxes(SubRegionPlacement.RequiredEnabled.PLACEMENT_ENABLED).values()) {
+                if (box.getPos1() == null || box.getPos2() == null) continue;
+                top = Math.max(top, Math.max(box.getPos1().getY(), box.getPos2().getY()));
+            }
         }
         return top == Integer.MIN_VALUE ? 0 : top;
     }
