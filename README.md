@@ -8,6 +8,24 @@ Mod client bay tu dong qua lai giua 2 toa do da luu san.
 - Nut **"Auto Flyer"** o goc tren ben trai menu Pause (bam **ESC** trong luc choi) -> bam vao mo thang man hinh cai dat.
 - 1 **phim tat** trong **Options -> Controls -> Auto Flyer -> "Open Auto Flyer settings"**: mac dinh chua gan phim nao,
   ban tu chon 1 phim (vd F6) de mo nhanh man hinh cai dat tu bat cu dau trong game, khong can mo Pause hay bam nut.
+- **2 che do bay**, chuyen doi bang nut "Che do" o dau man hinh cai dat:
+  - **Thu cong**: nhu mo ta o tren (2 vi tri + ziczac).
+  - **Litematica (tu dong)**: doc truc tiep ban ve dang tai trong mod Litematica, tu dong tim **block con thieu
+    gan nguoi choi nhat** (chi trong pham vi **lop dang hien** cua Litematica, dung config "Render layer range"
+    ban da chinh trong Litematica), bay len ngay phia tren no (y + do cao ban dat, mac dinh y+2) roi **dung yen**
+    cho mod print (vd Meteor Litematica Printer) tu dat block, xong tu dong bay sang block tiep theo, lap lai
+    cho den khi het block can dat trong lop dang hien. Mod **khong bao gio pha block**, chi di chuyen.
+    De tranh bay xuyen tuong khi xay map art 3D, neu duong bay thang bi vuong, mod se tu dong bay vong len tren
+    cao roi ha xuong thay vi dam thang qua vat can; neu ket o 1 cho qua lau se tu chuyen sang block khac.
+
+### Yeu cau rieng cho che do Litematica
+Che do nay can 2 mod sau da duoc cai (chi de DOC du lieu, khong dung lai jar cua ban - da bundle san trong
+`libs/` cua project nay dung phien ban ban dang choi):
+- **Litematica** (fabric-1.21.4-0.21.7 ban sakura-ryoko fork)
+- **malilib** (fabric-1.21.4-0.23.5)
+
+Neu ban cap nhat len ban Litematica/malilib khac, co the can thay file trong `libs/` va sua lai duong dan trong
+`build.gradle` (phan `dependencies`) cho khop ten file moi.
 - Man hinh cai dat co:
   - **Vi tri 1**: 3 o nhap X / Y / Z, nut **Set here** (dien toa do hien tai cua ban vao), nut **Clear** (xoa trong).
   - **Vi tri 2**: tuong tu Vi tri 1.

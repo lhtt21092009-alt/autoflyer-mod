@@ -23,6 +23,11 @@ dependencies {
 
 	// Mod Menu integration (optional, for the config button inside Mod Menu)
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+	// Litematica + malilib (bundled dev jars ban gui, dung de doc du lieu schematic).
+	// Khong co maven coordinate on dinh cho ban fork nay nen dung file jar truc tiep.
+	modImplementation files("libs/litematica-fabric-1_21_4-0_21_7.jar")
+	modImplementation files("libs/malilib-fabric-1_21_4-0_23_5.jar")
 }
 
 processResources {
